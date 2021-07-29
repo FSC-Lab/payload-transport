@@ -1,7 +1,7 @@
 #ifndef MOTORMODEL
 #define MOTORMODEL
-#include "common.h"
 #include "Polynomial.h"
+#include "common.h"
 
 namespace mdl {
 
@@ -45,7 +45,11 @@ class MotorModel : utils::Polynomial {
       thrust_setpoint.head<2>() *= thrust_rescale_factor;
     }
   }
-  using Polynomial::operator();
+
+  Eigen::Vector3d operator()(const Eigen::Vector3d &val) {
+    double norm_val = val.norm();
+    return Polynomial::operator()(norm_val) * val / norm_val;
+  }
 };
 }  // namespace mdl
 
