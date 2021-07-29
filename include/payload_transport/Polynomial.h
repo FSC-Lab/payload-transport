@@ -20,7 +20,7 @@ class Polynomial {
     T power = 1;
     T res = 0;
 
-    for (int i = 0; i <= degree_; i++) {
+    for (int i = 0; i < degree_; i++) {
       res += coeffs_[i] * power;
       power *= val;
     }
