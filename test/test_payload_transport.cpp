@@ -53,7 +53,6 @@ TEST(testIntegration, TestDiscreteIntegrator) {
 }
 
 TEST(testThrottleToAttitude, TestPX4CommandRegression) {
-  
   Eigen::Vector3d throttle_sp;
   Eigen::Vector3d desired_attitude;
   Eigen::Quaterniond desired_att_q_0, desired_att_q_1;
@@ -65,6 +64,20 @@ TEST(testThrottleToAttitude, TestPX4CommandRegression) {
   ctl::PathFollowingController::thrustToAttitudeSetpoint(thrust_vector, 1.0, desired_att_q_1, desired_throttle_1);
   ASSERT_TRUE(desired_att_q_0.isApprox(desired_att_q_1, 1e-4));
   ASSERT_FLOAT_EQ(desired_throttle_0, desired_throttle_1);
+}
+
+TEST(testThrustToThrottleLinear, TestPX4CommandRegression) {
+  double motor_intercept = 0;
+  double motor_slope = 0.3;
+
+  std::vector<double> coeffs = {motor_intercept, motor_slope};
+
+  mdl::MotorModel mdl(coeffs, 0, 0);
+
+  Eigen::Vector3d thrust_vector{1.0, 3.0, 2.0};
+  Eigen::Vector3d res_0 = mdl(thrust_vector);
+  Eigen::Vector3d res_1 = thrustToThrottleLinear(thrust_vector, motor_slope, motor_intercept);
+  ASSERT_TRUE(res_1.isApprox(res_0, 1e-4));
 }
 
 // Run all the tests that were declared with TEST()

@@ -81,4 +81,11 @@ void ThrottleToAttitude(const Eigen::Vector3d& thr_sp, double yaw_sp, Eigen::Vec
   desired_attitude = att_sp;
 }
 
+Eigen::Vector3d thrustToThrottleLinear(const Eigen::Vector3d& thrust_sp, double slope, double intercept) {
+  Eigen::Vector3d throttle_sp;
+  // Linear motor model
+  throttle_sp = (slope * thrust_sp.norm() + intercept) * thrust_sp.normalized();
+  return throttle_sp;
+}
+
 #endif  // PX4_COMMAND_REGRESSION
