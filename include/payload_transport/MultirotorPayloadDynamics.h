@@ -1,5 +1,5 @@
-#ifndef MULTIROTORPAYLOADDYNAMICS_H
-#define MULTIROTORPAYLOADDYNAMICS_H
+#ifndef MULTIROTORPAYLOADDYNAMICS
+#define MULTIROTORPAYLOADDYNAMICS
 #include "common.h"
 
 namespace mdl {
@@ -68,4 +68,4 @@ class MultirotorPayloadDynamics {
   double cable_squared_length() const { return cable_squared_length_; }
 };
 }  // namespace mdl
-#endif
+#endif  // MULTIROTORPAYLOADDYNAMICS
