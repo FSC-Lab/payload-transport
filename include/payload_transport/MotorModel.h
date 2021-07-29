@@ -1,6 +1,7 @@
 #ifndef MOTORMODEL
 #define MOTORMODEL
-#include "utils.h"
+#include "common.h"
+#include "Polynomial.h"
 
 namespace mdl {
 
