@@ -4,6 +4,33 @@
 
 namespace ctl {
 
+struct PathFollowingControllerParams {
+  double err_p_xy;
+  double err_p_z;
+  double vel_p_xy;
+  double vel_p_z;
+  double Kpv_xy;
+  double Kpv_z;
+  double kL;
+
+  double ude_weight_xy;
+  double ude_weight_z;
+
+  double err_vel_bounds_xy;
+  double err_vel_bounds_z;
+
+  double integral_bounds_xy;
+  double integral_bounds_z;
+
+  double max_tilt_angle;
+  double motor_saturation_thrust;
+
+  Eigen::Vector3d err_p() const { return {err_p_xy, err_p_xy, err_p_z}; }
+  Eigen::Vector3d vel_p() const { return {vel_p_xy, vel_p_xy, vel_p_z}; }
+  Eigen::Vector3d ude_weight() const { return {ude_weight_xy, ude_weight_xy, ude_weight_z}; }
+  Eigen::Vector3d integral_bounds() const { return {integral_bounds_xy, integral_bounds_xy, integral_bounds_z}; }
+  Eigen::Vector3d err_vel_bounds() const { return {err_vel_bounds_xy, err_vel_bounds_xy, err_vel_bounds_z}; }
+};
 class PathFollowingController {
   // Integral term in UDE
   utils::DiscreteTimeIntegrator<double, 3> ud_integrator_;
@@ -21,8 +48,9 @@ class PathFollowingController {
 
   Eigen::Vector3d get_ude_estimate() {
     const mdl::MultirotorPayloadDynamics::CableMappingMatrix B = sys_mdl_.B_matrix();
-    return ude_weight_ * (sys_mdl_.payload_mass() * B * sys_mdl_.cable_velocity_v() +
-                          sys_mdl_.vehicle_mass() * sys_mdl_.vehicle().twist().linear() + ud_integrator_.value());
+    return ude_weight_.cwiseProduct(sys_mdl_.payload_mass() * B * sys_mdl_.cable_velocity_v() +
+                                    sys_mdl_.vehicle_mass() * sys_mdl_.vehicle().twist().linear() +
+                                    ud_integrator_.value());
   }
 
  public:
@@ -70,7 +98,7 @@ class PathFollowingController {
   bool is_ude_integration_active() const { return is_ude_integration_active_; }
 
   static void thrustToAttitudeSetpoint(const Eigen::Vector3d &thrust_setpoint, const double yaw_setpoint,
-                                       Eigen::Quaterniond &attitude_setpoint, double throttle_setpoint) {
+                                       Eigen::Quaterniond &attitude_setpoint, double &throttle_setpoint) {
     using std::abs;
     using std::cos;
     using std::sin;
@@ -117,33 +145,6 @@ class PathFollowingController {
   }
 };
 
-struct PathFollowingControllerParams {
-  double err_p_xy;
-  double err_p_z;
-  double vel_p_xy;
-  double vel_p_z;
-  double Kpv_xy;
-  double Kpv_z;
-  double kL;
-
-  double ude_weight_xy;
-  double ude_weight_z;
-
-  double err_vel_bounds_xy;
-  double err_vel_bounds_z;
-
-  double integral_bounds_xy;
-  double integral_bounds_z;
-
-  double max_tilt_angle;
-  double motor_saturation_thrust;
-
-  Eigen::Vector3d err_p() const { return {err_p_xy, err_p_xy, err_p_z}; }
-  Eigen::Vector3d vel_p() const { return {vel_p_xy, vel_p_xy, vel_p_z}; }
-  Eigen::Vector3d ude_weight() const { return {ude_weight_xy, ude_weight_xy, ude_weight_z}; }
-  Eigen::Vector3d integral_bounds() const { return {integral_bounds_xy, integral_bounds_xy, integral_bounds_z}; }
-  Eigen::Vector3d err_vel_bounds() const { return {err_vel_bounds_xy, err_vel_bounds_xy, err_vel_bounds_z}; }
-};
 }  // namespace ctl
 
 #endif  // PATHFOLLOWINGCONTROLLER
