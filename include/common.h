@@ -58,18 +58,19 @@
 #include <GeographicLib/Geocentric.hpp>
 
 #include "constants.h"
+#include "utils.h"
+
 #include "data_structures.h"
 #include "payload_transport/DiscreteTimeIntegrator.h"
 #include "payload_transport/MotorModel.h"
 #include "payload_transport/MultirotorPayloadDynamics.h"
+#include "payload_transport/PathFollowingController.h"
 #include "payload_transport/WaypointManager.h"
-#include "utils.h"
 
 namespace utils {
 class Pose;
 class Twist;
 class RigidBody;
-class Polynomial;
 class MotorModel;
 
 namespace Geo {
@@ -79,4 +80,13 @@ Eigen::Vector3d CoordsGlobalToLocal(const Container1&, const Container2&);
 
 }  // namespace utils
 
-#endif  // COMMON
+namespace ctl {
+class PathFollowingController;
+struct PathFollowingControllerParams;
+}  // namespace ctl
+
+namespace mdl {
+class MotorModel;
+class MultirotorPayloadDynamics;
+}  // namespace mdl
+#endif // COMMON
