@@ -25,6 +25,9 @@ struct PathFollowingControllerParams {
   double max_tilt_angle;
   double motor_saturation_thrust;
 
+  bool init_ude_integration_active;
+  bool init_error_filtering_active;
+
   Eigen::Vector3d err_p() const { return {err_p_xy, err_p_xy, err_p_z}; }
   Eigen::Vector3d vel_p() const { return {vel_p_xy, vel_p_xy, vel_p_z}; }
   Eigen::Vector3d ude_weight() const { return {ude_weight_xy, ude_weight_xy, ude_weight_z}; }
@@ -43,8 +46,22 @@ class PathFollowingController {
   Eigen::Vector3d ude_weight_;
   double max_tilt_angle_;
   double motor_saturation_thrust_;
-
+  double err_filter_weight_;
+  double vel_filter_weight_;
   bool is_ude_integration_active_;
+  bool is_error_filtering_active_;
+
+  Eigen::Vector3d filterError(const Eigen::Vector3d &pos_error) {
+    using std::sqrt;
+    double filter_factor = 1.0 / sqrt(err_filter_weight_ + pos_error.squaredNorm());
+    return pos_error * filter_factor;
+  }
+
+  Eigen::Vector3d filterVelocity(const Eigen::Vector3d &vel_error) {
+    using std::sqrt;
+    double filter_factor = 1.0 / sqrt(err_filter_weight_ + vel_error.squaredNorm());
+    return vel_error * filter_factor;
+  }
 
   Eigen::Vector3d get_ude_estimate() {
     const mdl::MultirotorPayloadDynamics::CableMappingMatrix B = sys_mdl_.B_matrix();
@@ -63,12 +80,20 @@ class PathFollowingController {
         ude_weight_(params.ude_weight()),
         max_tilt_angle_(params.max_tilt_angle),
         motor_saturation_thrust_(params.motor_saturation_thrust),
+        is_ude_integration_active_(params.init_ude_integration_active),
+        is_error_filtering_active_(params.init_error_filtering_active),
         ud_integrator_(utils::zeros<double, 3>, params_.integral_bounds(), -params_.integral_bounds(),
                        params_.err_vel_bounds(), -params_.err_vel_bounds()){};
 
   utils::ThrustAndAttitudeTarget runController(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error,
                                                double yaw_sp, double dt) {
-    Eigen::Vector3d path_and_velocity_error = err_p_.cwiseProduct(pos_error) + vel_p_.cwiseProduct(vel_error);
+    Eigen::Vector3d path_and_velocity_error;
+    if (is_error_filtering_active_) {
+      path_and_velocity_error =
+          err_p_.cwiseProduct(filterVelocity(pos_error)) + vel_p_.cwiseProduct(filterVelocity(vel_error));
+    } else {
+      path_and_velocity_error = err_p_.cwiseProduct(pos_error) + vel_p_.cwiseProduct(vel_error);
+    }
     path_and_velocity_error = utils::Clip(path_and_velocity_error, 0.5);  // constraint the error
 
     // calculate the ud_integrator_ term of the UDE
@@ -147,4 +172,4 @@ class PathFollowingController {
 
 }  // namespace ctl
 
-#endif  // PATHFOLLOWINGCONTROLLER
+#endif // PATHFOLLOWINGCONTROLLER
