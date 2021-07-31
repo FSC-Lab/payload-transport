@@ -53,6 +53,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <iostream>
+#include <iomanip>
 
 #include <mavros/frame_tf.h>
 #include <GeographicLib/Geocentric.hpp>

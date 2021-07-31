@@ -41,10 +41,34 @@ struct Pose {
     lhs.orientation_.coeffs().swap(rhs.orientation_.coeffs());
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const Pose& pose) {
+    const auto& p = pose.position();
+    const auto& q = pose.orientation();
+    os << std::setprecision(4) << "Position: [" << p.x() << " " << p.y() << " " << p.z() << "]\nOrientation: [" << q.w()
+       << " " << q.x() << " " << q.y() << " " << q.z() << "]";
+    return os;
+  }
+
   static Pose fromMsg(const geometry_msgs::Pose& other) {
-    auto t = Eigen::Vector3d::Map(&other.position.x);
-    auto r = Eigen::Map<const Eigen::Quaterniond>(&other.orientation.x);
-    return Pose(t, r);
+    Pose res;
+    res.setFromMsg(other);
+    return res;
+  }
+
+  static Pose fromMsg(geometry_msgs::Pose&& other) {
+    Pose res;
+    res.setFromMsg(other);
+    return res;
+  }
+
+  void setFromMsg(const geometry_msgs::Pose& other) {
+    this->position_ = Eigen::Vector3d::Map(&other.position.x);
+    this->orientation_ = Eigen::Map<const Eigen::Quaterniond>(&other.orientation.x);
+  }
+
+  void setFromMsg(geometry_msgs::Pose&& other) {
+    this->position_.swap(Eigen::Map<Eigen::Vector3d>(&other.position.x));
+    this->orientation_.coeffs().swap(Eigen::Map<Eigen::Vector4d>(&other.orientation.x));
   }
 
   geometry_msgs::Pose toMsg() const {
@@ -91,10 +115,34 @@ class Twist {
     lhs.angular_.swap(rhs.angular_);
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const Twist& twist) {
+    const auto& v = twist.linear();
+    const auto& w = twist.angular();
+    os << std::setprecision(4) << "Linear: [" << v.x() << " " << v.y() << " " << v.z() << "]\nAngular: ["
+       << " " << w.x() << " " << w.y() << " " << w.z() << "]";
+    return os;
+  }
+
   static Twist fromMsg(const geometry_msgs::Twist& other) {
-    auto t = Eigen::Vector3d::Map(&other.linear.x);
-    auto r = Eigen::Vector3d::Map(&other.angular.x);
-    return Twist(t, r);
+    Twist res;
+    res.setFromMsg(other);
+    return res;
+  }
+
+  static Twist fromMsg(geometry_msgs::Twist&& other) {
+    Twist res;
+    res.setFromMsg(other);
+    return res;
+  }
+
+  void setFromMsg(const geometry_msgs::Twist& other) {
+    this->linear_ = Eigen::Vector3d::Map(&other.linear.x);
+    this->angular_ = Eigen::Vector3d::Map(&other.angular.x);
+  }
+
+  void setFromMsg(geometry_msgs::Twist&& other) {
+    this->linear_.swap(Eigen::Map<Eigen::Vector3d>(&other.linear.x));
+    this->angular_.swap(Eigen::Map<Eigen::Vector3d>(&other.angular.x));
   }
 
   geometry_msgs::Twist toMsg(const Twist& other) const {
@@ -186,4 +234,4 @@ class ThrustAndAttitudeTarget {
 };
 }  // namespace utils
 
-#endif  // DATA_STRUCTURES
+#endif // DATA_STRUCTURES
