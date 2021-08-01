@@ -4,6 +4,17 @@
 // Bring in gtest
 #include <gtest/gtest.h>
 
+
+struct Axpb {
+  const Eigen::Matrix2d A = (Eigen::Matrix2d() << 0.0, 1.0, -2.0, -3.0).finished();
+  const Eigen::Vector2d b = {0.0, -9.81};
+
+  static constexpr double soln_prec = 1e-2;
+
+  inline Eigen::Vector2d operator()(const Eigen::Vector2d& x) const { return A * x + b; }
+};
+
+constexpr double Axpb::soln_prec;
 // Declare a test
 TEST(testIntegration, TestDiscreteIntegrator) {
   // Test the discrete time integrator's performance on the spring-mass system model
@@ -18,13 +29,9 @@ TEST(testIntegration, TestDiscreteIntegrator) {
   // fun = lambda t, x: A @ x + b
   // soln = solve_ivp(fun, [0, 5], zeros((2,)))
 
-  Eigen::Matrix2d A;
-  Eigen::Vector2d b;
-  A << 0.0, 1.0, -2.0, -3.0;
-  b << 0.0, -9.81;
-  auto func = [A, b](const Eigen::Vector2d& val) { return A * val + b; };
-
   utils::DiscreteTimeIntegrator<double, 2> integrator(Eigen::Vector2d::Zero(), 100.0, -100.0);
+
+  Axpb func;
 
   constexpr int data_points = 1000;
   constexpr double time_span = 5.0;
@@ -33,23 +40,21 @@ TEST(testIntegration, TestDiscreteIntegrator) {
   double time = 0;
   Eigen::Vector2d soln;
 
-  constexpr double ode_soln_prec = 1e-3;
-
   for (int k = 0; k < data_points - 1; ++k) {
     time += time_step;
     soln = integrator.integrateOneStep(time_step, func(soln));
     // Compare solutions to the true value at different evaluation points
     if (std::abs(time - 1.0019067405092255) < 1e-6) {
       const Eigen::Vector2d true_soln{-1.9644083, -2.2791535};
-      ASSERT_TRUE(soln.isApprox(true_soln, ode_soln_prec));
+      ASSERT_TRUE(soln.isApprox(true_soln, Axpb::soln_prec));
     } else if (std::abs(time - 4.0807629) < 1e-6) {
       const Eigen::Vector2d true_soln{-4.7406978, -0.1628006};
-      ASSERT_TRUE(soln.isApprox(true_soln, ode_soln_prec));
+      ASSERT_TRUE(soln.isApprox(true_soln, Axpb::soln_prec));
     }
   }
 
   const Eigen::Vector2d true_soln{-4.83910156, -0.06562637};
-  ASSERT_TRUE(soln.isApprox(true_soln, ode_soln_prec));
+  ASSERT_TRUE(soln.isApprox(true_soln, Axpb::soln_prec));
 }
 
 TEST(testThrottleToAttitude, TestPX4CommandRegression) {
