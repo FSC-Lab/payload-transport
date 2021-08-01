@@ -44,10 +44,10 @@ TEST(testIntegration, TestDiscreteIntegrator) {
     time += time_step;
     soln = integrator.integrateOneStep(time_step, func(soln));
     // Compare solutions to the true value at different evaluation points
-    if (std::abs(time - 1.0019067405092255) < 1e-6) {
+    if (std::abs(time - 1.0019067405092255) < 0.5 * time_step) {
       const Eigen::Vector2d true_soln{-1.9644083, -2.2791535};
       ASSERT_TRUE(soln.isApprox(true_soln, Axpb::soln_prec));
-    } else if (std::abs(time - 4.0807629) < 1e-6) {
+    } else if (std::abs(time - 4.0807629) < 0.5 * time_step) {
       const Eigen::Vector2d true_soln{-4.7406978, -0.1628006};
       ASSERT_TRUE(soln.isApprox(true_soln, Axpb::soln_prec));
     }
