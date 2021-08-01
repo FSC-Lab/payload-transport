@@ -130,7 +130,7 @@ class PathFollowingController {
 
     Eigen::Vector3d thrust_setpoint_per_motor =
         (path_and_velocity_error - ude_estimate + grav_compensation) / sys_mdl_.num_motors();
-    motor_mdl_.limitThrust(thrust_setpoint_per_motor);
+    motor_mdl_.limitThrust(thrust_setpoint_per_motor, max_tilt_angle_);
 
     const Eigen::Vector3d throttle_setpoint = motor_mdl_(thrust_setpoint_per_motor);
     // throttle_sp = px4_command_utils::thrustToThrottleLinear(thrust_sp, motor_slope, motor_intercept);

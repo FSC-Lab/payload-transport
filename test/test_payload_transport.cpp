@@ -77,7 +77,7 @@ TEST(testThrustToThrottleLinear, TestPX4CommandRegression) {
 
   std::vector<double> coeffs = {motor_intercept, motor_slope};
 
-  mdl::MotorModel mdl(coeffs, 0, 0);
+  mdl::MotorModel mdl(coeffs, 0);
 
   Eigen::Vector3d thrust_vector{1.0, 3.0, 2.0};
   Eigen::Vector3d res_0 = mdl(thrust_vector);

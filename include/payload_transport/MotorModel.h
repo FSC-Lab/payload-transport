@@ -8,15 +8,12 @@ namespace mdl {
 class MotorModel : utils::Polynomial {
   std::vector<double> coeffs_;
   double motor_saturation_thrust_;
-  double max_lateral_thrust_;
 
  public:
-  MotorModel(const std::vector<double> &coeffs, double motor_saturation_thrust, double max_lateral_thrust)
-      : utils::Polynomial(coeffs),
-        motor_saturation_thrust_(motor_saturation_thrust),
-        max_lateral_thrust_(max_lateral_thrust){};
+  MotorModel(const std::vector<double> &coeffs, double motor_saturation_thrust)
+      : utils::Polynomial(coeffs), motor_saturation_thrust_(motor_saturation_thrust){};
 
-  void limitThrust(Eigen::Vector3d &thrust_setpoint) {
+  void limitThrust(Eigen::Vector3d &thrust_setpoint, double max_tilt_angle = 0.0) {
     using std::abs;
     using std::min;
     using std::sqrt;
@@ -24,10 +21,10 @@ class MotorModel : utils::Polynomial {
 
     const double &thrust_zcomp = thrust_setpoint[2];
 
-    double saturation_thrust_xycomp;
+    double max_thrust_xycomp;
     if (thrust_zcomp < motor_saturation_thrust_) {
       // Lift does not saturate actuators, aim to deliver requested lift exactly while scaling back lateral thrust
-      saturation_thrust_xycomp =
+      max_thrust_xycomp =
           sqrt(motor_saturation_thrust_ * motor_saturation_thrust_ - thrust_zcomp * thrust_zcomp);
     } else {
       // Lift alone saturates actuators, deliver as much lift as possible and no lateral thrust
@@ -35,8 +32,12 @@ class MotorModel : utils::Polynomial {
       thrust_setpoint.head<2>().setZero();
       return;
     }
+;
+    if (max_tilt_angle > 0.0) {
+      const double max_lateral_thrust = tan(utils::deg2rad(max_tilt_angle));
+      max_thrust_xycomp = min(max_lateral_thrust, max_thrust_xycomp);
+    }
 
-    const double max_thrust_xycomp = min(max_lateral_thrust_, saturation_thrust_xycomp);
     const double thrust_xycomp_sq_norm = thrust_setpoint.head<2>().squaredNorm();
 
     if (thrust_xycomp_sq_norm > max_thrust_xycomp * max_thrust_xycomp) {
