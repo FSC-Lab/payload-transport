@@ -22,8 +22,10 @@ struct PathFollowingControllerParams {
   double integral_bounds_xy;
   double integral_bounds_z;
 
+  double err_filter_weight;
+  double vel_filter_weight;
+
   double max_tilt_angle;
-  double motor_saturation_thrust;
 
   bool init_ude_integration_active;
   bool init_error_filtering_active;
@@ -33,6 +35,25 @@ struct PathFollowingControllerParams {
   Eigen::Vector3d ude_weight() const { return {ude_weight_xy, ude_weight_xy, ude_weight_z}; }
   Eigen::Vector3d integral_bounds() const { return {integral_bounds_xy, integral_bounds_xy, integral_bounds_z}; }
   Eigen::Vector3d err_vel_bounds() const { return {err_vel_bounds_xy, err_vel_bounds_xy, err_vel_bounds_z}; }
+
+  PathFollowingControllerParams(const std::string &base_namespace = ""s) {
+    ros::NodeHandle nh;
+    err_p_xy = nh.param(base_namespace + "/err_p_xy", 1.0);
+    err_p_z = nh.param(base_namespace + "/err_p_z", 2.0);
+    vel_p_xy = nh.param(base_namespace + "/vel_p_xy", 0.5);
+    vel_p_z = nh.param(base_namespace + "/vel_p_z", 0.5);
+    ude_weight_xy = nh.param(base_namespace + "/ude_weight_xy", 0.0);
+    ude_weight_z = nh.param(base_namespace + "/ude_weight_z", 0.0);
+    err_vel_bounds_xy = nh.param(base_namespace + "/err_vel_bounds_xy", 0.3);
+    err_vel_bounds_z = nh.param(base_namespace + "/err_vel_bounds_z", 0.3);
+    integral_bounds_xy = nh.param(base_namespace + "/integral_bounds_xy", 0.5);
+    integral_bounds_z = nh.param(base_namespace + "/integral_bounds_z", 0.5);
+    err_filter_weight = nh.param(base_namespace + "/err_filter_weight", 1.0);
+    vel_filter_weight = nh.param(base_namespace + "/vel_filter_weight", 1.0);
+    max_tilt_angle = nh.param(base_namespace + "/max_tilt_angle", 45.0);
+    init_error_filtering_active = nh.param(base_namespace + "/init/error_filtering_active", true);
+    init_ude_integration_active = nh.param(base_namespace + "/init/ude_integration_active", true);
+  }
 };
 class PathFollowingController {
   // Integral term in UDE
@@ -78,8 +99,9 @@ class PathFollowingController {
         err_p_(params.err_p()),
         vel_p_(params.vel_p()),
         ude_weight_(params.ude_weight()),
+        err_filter_weight_(params.err_filter_weight),
+        vel_filter_weight_(params.vel_filter_weight),
         max_tilt_angle_(params.max_tilt_angle),
-        motor_saturation_thrust_(params.motor_saturation_thrust),
         is_ude_integration_active_(params.init_ude_integration_active),
         is_error_filtering_active_(params.init_error_filtering_active),
         ud_integrator_(utils::zeros<double, 3>, params_.integral_bounds(), -params_.integral_bounds(),
