@@ -58,7 +58,7 @@ struct PathFollowingControllerParams {
 class PathFollowingController {
   // Integral term in UDE
   utils::DiscreteTimeIntegrator<double, 3> ud_integrator_;
-  mdl::MultirotorPayloadDynamics sys_mdl_;
+  const mdl::MultirotorPayloadDynamics &sys_mdl_;
   mdl::MotorModel motor_mdl_;
   PathFollowingControllerParams params_;
 
@@ -143,6 +143,8 @@ class PathFollowingController {
 
   bool &is_ude_integration_active() { return is_ude_integration_active_; }
   bool is_ude_integration_active() const { return is_ude_integration_active_; }
+
+  const mdl::MultirotorPayloadDynamics &system_model() const { return sys_mdl_; }
 
   static void thrustToAttitudeSetpoint(const Eigen::Vector3d &thrust_setpoint, const double yaw_setpoint,
                                        Eigen::Quaterniond &attitude_setpoint, double &throttle_setpoint) {
