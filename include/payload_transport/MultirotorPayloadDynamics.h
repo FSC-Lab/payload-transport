@@ -2,6 +2,7 @@
 #define MULTIROTORPAYLOADDYNAMICS
 #include "common.h"
 
+using namespace std::string_literals;
 namespace mdl {
 
 class MultirotorPayloadDynamics {
@@ -22,9 +23,27 @@ class MultirotorPayloadDynamics {
   double cable_length_;
   double cable_squared_length_;
 
+  ros::Subscriber vehicle_pose_sub_;
+  ros::Subscriber vehicle_twist_sub_;
+  ros::Subscriber payload_pose_sub_;
+  ros::Subscriber payload_twist_sub_;
+
+  bool has_vehicle_pose_feedback_;
+  bool has_vehicle_twist_feedback_;
+  bool has_payload_pose_feedback_;
+  bool has_payload_twist_feedback_;
+
+  void vehiclePoseCallback(const geometry_msgs::PoseStampedConstPtr &msg) {
+    vehicle_.pose().setFromMsg(std::move(msg->pose));
+  }
+  void vehicleTwistCallback(const geometry_msgs::TwistStampedConstPtr &msg) {
+    vehicle_.twist().setFromMsg(std::move(msg->twist));
+  }
+
  public:
   using CableMappingMatrix = Eigen::Matrix<double, 3, 2>;
-  MultirotorPayloadDynamics(const std::string &base_namespace = "mass_geometry"s) {
+  MultirotorPayloadDynamics(const std::string &base_namespace = "mass_geometry"s,
+                            std::map<std::string, std::string> feedback_source_topics = {}) {
     ros::NodeHandle nh("~");
     num_motors_ = nh.param(base_namespace + "/num_motors", 4);
     vehicle_mass_ = nh.param(base_namespace + "/vehicle_mass", 1.0);
@@ -33,6 +52,17 @@ class MultirotorPayloadDynamics {
     total_mass_ = payload_mass_ + vehicle_mass_;
     cable_squared_length_ = cable_length_ * cable_length_;
 
+    if (feedback_source_topics["vehicle_pose"].empty()) {
+      ROS_WARN("Vehicle pose feedback likely to be unavailable! Got empty topic specified for source of data.");
+    }
+    vehicle_pose_sub_ =
+        nh.subscribe(feedback_source_topics["vehicle_pose"], 1, &MultirotorPayloadDynamics::vehiclePoseCallback, this);
+
+    if (feedback_source_topics["vehicle_twist"].empty()) {
+      ROS_WARN("Vehicle twist feedback likely to be unavailable! Got empty topic specified for source of data.");
+    }
+    vehicle_twist_sub_ = nh.subscribe(feedback_source_topics["vehicle_twist"], 1,
+                                      &MultirotorPayloadDynamics::vehicleTwistCallback, this);
   }
 
   CableMappingMatrix B_matrix() const {
