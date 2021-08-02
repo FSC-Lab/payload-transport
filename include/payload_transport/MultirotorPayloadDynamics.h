@@ -15,22 +15,25 @@ class MultirotorPayloadDynamics {
   Eigen::Vector2d cable_vector_r_;
   Eigen::Vector2d cable_velocity_v_;
 
-  const double payload_mass_;
-  const double vehicle_mass_;
-  const double total_mass_;
-  const int num_motors_;
-  const double cable_length_;
-  const double cable_squared_length_;
+  double payload_mass_;
+  double vehicle_mass_;
+  double total_mass_;
+  int num_motors_;
+  double cable_length_;
+  double cable_squared_length_;
 
  public:
   using CableMappingMatrix = Eigen::Matrix<double, 3, 2>;
-  MultirotorPayloadDynamics(int num_motors, double vehicle_mass, double payload_mass, double cable_length)
-      : num_motors_(num_motors),
-        payload_mass_(payload_mass),
-        vehicle_mass_(vehicle_mass),
-        total_mass_(payload_mass + vehicle_mass),
-        cable_length_(cable_length),
-        cable_squared_length_(cable_length * cable_length){};
+  MultirotorPayloadDynamics(const std::string &base_namespace = "mass_geometry"s) {
+    ros::NodeHandle nh("~");
+    num_motors_ = nh.param(base_namespace + "/num_motors", 4);
+    vehicle_mass_ = nh.param(base_namespace + "/vehicle_mass", 1.0);
+    payload_mass_ = nh.param(base_namespace + "/payload_mass", 0.5);
+    cable_length_ = nh.param(base_namespace + "/cable_length", 0.5);
+    total_mass_ = payload_mass_ + vehicle_mass_;
+    cable_squared_length_ = cable_length_ * cable_length_;
+
+  }
 
   CableMappingMatrix B_matrix() const {
     auto cable_z_comp_sq = (cable_squared_length_ - cable_vector_r_.squaredNorm());
