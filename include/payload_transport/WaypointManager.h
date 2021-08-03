@@ -15,21 +15,18 @@ class WaypointManager {
   std::vector<double> velocities_;
 
   utils::StdVector_t<Eigen::Vector3d> headings_;
-  int wp_index_;
 
   ros::NodeHandle nh_;
   ros::Subscriber wp_sub_;
   ros::ServiceClient param_client_;
 
-  const std::string gp_sub_key_;
   const std::string wp_sub_key_;
-
   const std::string param_sub_key_;
+  int wp_index_;
 
   mavros_msgs::WaypointList wps_;
 
  public:
-
   const utils::StdVector_t<Eigen::Vector3d>& waypoints() { return waypoints_; }
 
   auto gcsWaypointNum() { return wps_.waypoints.size(); }
@@ -61,9 +58,10 @@ class WaypointManager {
       ROS_INFO("Using fallback speed: %8.4f for path-following velocities", backup_speed);
       return true;
     }
+    return false;
   }
 
-  void computePath(const Eigen::Vector3d &reference_position) {
+  void computePath(const Eigen::Vector3d& reference_position) {
     waypoints_.clear();
     waypoints_.reserve(wps_.waypoints.size());
     using std::abs;
@@ -96,8 +94,10 @@ class WaypointManager {
     const Eigen::Vector3d dist_to_last_waypoint = curr_waypoint - vehicle_position;
     const auto& curr_heading = headings_[wp_index_];
     const Eigen::Vector3d pos_error = dist_to_last_waypoint - curr_heading.dot(dist_to_last_waypoint) * curr_heading;
-    ROS_INFO("waypoint %d : %zu", wp_index_, waypoints_.size());
-    if (wp_index_ == waypoints_.size() - 1) {
+
+    int n_waypoints = waypoints_.size();
+    ROS_INFO("waypoint %d : %d", wp_index_, n_waypoints);
+    if (wp_index_ == n_waypoints - 1) {
       ROS_ERROR("Payload control mission complete!");
     } else {
       if (pos_error.squaredNorm() < 0.5) {

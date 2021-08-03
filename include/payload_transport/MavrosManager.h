@@ -13,24 +13,24 @@
 #include <ros/ros.h>
 #include <sensor_msgs/NavSatFix.h>
 
+namespace utils {
 class MavrosManager {
   ros::NodeHandle nh_;
   ros::Subscriber state_sub_;
   ros::Subscriber home_pos_sub_;
   ros::Publisher local_pos_pub_;
+  ros::Time last_request_;
 
   std::map<std::string, ros::ServiceClient> clients_;
+  std::string home_position_topic_;
   std::string arm_key_;
-  std::string setmode_key_;
   std::string takeoff_key_;
+  std::string setmode_key_;
   std::string param_get_key_;
   std::string paramset_key_;
   std::string wp_pull_key_;
 
-  ros::Time last_request_;
-
   bool got_home_position_;
-  std::string home_position_topic_;
 
   double takeoff_altitude_;
 
@@ -150,12 +150,12 @@ class MavrosManager {
         success = true;
       }
     }
+    return success;
   }
 
-  bool getParam(const std::string& param_id) {
-    auto success = false;
+  double getParam(const std::string& param_id, double default_value) {
     mavros_msgs::ParamGet payload;
-    payload.request.param_id = "WPNAV_SPEED";
+    payload.request.param_id = param_id;
     if (!clients_[param_get_key_].call(payload)) {
       ShowCallFailureMsg(param_get_key_);
     } else {
@@ -163,9 +163,28 @@ class MavrosManager {
         ROS_INFO("Failed to get parameter %s", param_id.c_str());
       } else {
         const auto& val = payload.response.value;
-        ROS_INFO("Got %s with value %4.2f", param_id.c_str(), val.integer ? double(val.integer) : val.real);
+        ROS_INFO("Got %s with value %4.2f", param_id.c_str(), val.real);
+        return val.real;
       }
     }
+    return default_value;
+  }
+
+  int getParam(const std::string& param_id, int default_value) {
+    mavros_msgs::ParamGet payload;
+    payload.request.param_id = param_id;
+    if (!clients_[param_get_key_].call(payload)) {
+      ShowCallFailureMsg(param_get_key_);
+    } else {
+      if (!payload.response.success) {
+        ROS_INFO("Failed to get parameter %s", param_id.c_str());
+      } else {
+        const auto& val = payload.response.value;
+        ROS_INFO("Got %s with value %ld", param_id.c_str(), val.integer);
+        return val.real;
+      }
+    }
+    return default_value;
   }
 
   const mavros_msgs::State& state() const { return state_; }
@@ -174,3 +193,4 @@ class MavrosManager {
 };
 
 #endif  // MAVROSMANAGER
+}

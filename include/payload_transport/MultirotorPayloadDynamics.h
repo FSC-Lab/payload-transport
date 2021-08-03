@@ -65,7 +65,7 @@ class MultirotorPayloadDynamics {
                                       &MultirotorPayloadDynamics::vehicleTwistCallback, this);
   }
 
-  CableMappingMatrix B_matrix() const {
+  inline CableMappingMatrix B_matrix() const {
     auto cable_z_comp_sq = (cable_squared_length_ - cable_vector_r_.squaredNorm());
     CableMappingMatrix B;
     if (cable_z_comp_sq > 1e-10) {
@@ -74,13 +74,12 @@ class MultirotorPayloadDynamics {
     } else {
       B.row(2).setConstant(0.1);
     }
+    return B;
   }
 
-  Eigen::Vector2d setCableVectorR(const Eigen::Vector3d &paylod_rel_position) {
-    cable_vector_r_ = paylod_rel_position.head<2>();
-  };
+  void setCableVectorR(const Eigen::Vector3d &paylod_rel_position) { cable_vector_r_ = paylod_rel_position.head<2>(); };
 
-  Eigen::Vector3d setCableVectorL(const Eigen::Vector2d &cable_vector_r) {
+  void setCableVectorL(const Eigen::Vector2d &cable_vector_r) {
     auto cable_z_comp = sqrt(cable_squared_length_ - cable_vector_r.squaredNorm());
     paylod_rel_position_ << cable_vector_r, cable_z_comp;
   }

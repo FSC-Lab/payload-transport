@@ -62,19 +62,20 @@ struct Pose {
   }
 
   void setFromMsg(const geometry_msgs::Pose& other) {
-    this->position_ = Eigen::Vector3d::Map(&other.position.x);
-    this->orientation_ = Eigen::Map<const Eigen::Quaterniond>(&other.orientation.x);
+    position_ = Eigen::Vector3d::Map(&other.position.x);
+    orientation_ = Eigen::Map<const Eigen::Quaterniond>(&other.orientation.x);
   }
 
   void setFromMsg(geometry_msgs::Pose&& other) {
-    this->position_.swap(Eigen::Map<Eigen::Vector3d>(&other.position.x));
-    this->orientation_.coeffs().swap(Eigen::Map<Eigen::Vector4d>(&other.orientation.x));
+    position_.swap(Eigen::Map<Eigen::Vector3d>(&other.position.x));
+    orientation_.coeffs().swap(Eigen::Map<Eigen::Vector4d>(&other.orientation.x));
   }
 
   geometry_msgs::Pose toMsg() const {
     geometry_msgs::Pose res;
-    Eigen::Vector3d::Map(&res.position.x) = this->position_;
-    Eigen::QuaternionMapd(&res.orientation.x) = this->orientation_;
+    Eigen::Vector3d::Map(&res.position.x) = position_;
+    Eigen::QuaternionMapd(&res.orientation.x) = orientation_;
+    return res;
   }
 };
 
@@ -136,21 +137,20 @@ class Twist {
   }
 
   void setFromMsg(const geometry_msgs::Twist& other) {
-    this->linear_ = Eigen::Vector3d::Map(&other.linear.x);
-    this->angular_ = Eigen::Vector3d::Map(&other.angular.x);
+    linear_ = Eigen::Vector3d::Map(&other.linear.x);
+    angular_ = Eigen::Vector3d::Map(&other.angular.x);
   }
 
   void setFromMsg(geometry_msgs::Twist&& other) {
-    this->linear_.swap(Eigen::Map<Eigen::Vector3d>(&other.linear.x));
-    this->angular_.swap(Eigen::Map<Eigen::Vector3d>(&other.angular.x));
+    linear_.swap(Eigen::Map<Eigen::Vector3d>(&other.linear.x));
+    angular_.swap(Eigen::Map<Eigen::Vector3d>(&other.angular.x));
   }
 
-  geometry_msgs::Twist toMsg(const Twist& other) const {
+  geometry_msgs::Twist toMsg() const {
     geometry_msgs::Twist res;
-    auto t = Eigen::Vector3d::Map(&res.linear.x);
-    auto r = Eigen::Vector3d::Map(&res.angular.x);
-    t = other.linear();
-    r = other.angular();
+    Eigen::Vector3d::Map(&res.linear.x) = linear_;
+    Eigen::Vector3d::Map(&res.angular.x) = angular_;
+    return res;
   }
 };
 
@@ -234,4 +234,4 @@ class ThrustAndAttitudeTarget {
 };
 }  // namespace utils
 
-#endif // DATA_STRUCTURES
+#endif  // DATA_STRUCTURES

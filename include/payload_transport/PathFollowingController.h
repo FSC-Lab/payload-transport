@@ -65,10 +65,10 @@ class PathFollowingController {
   Eigen::Vector3d err_p_;
   Eigen::Vector3d vel_p_;
   Eigen::Vector3d ude_weight_;
-  double max_tilt_angle_;
   double motor_saturation_thrust_;
   double err_filter_weight_;
   double vel_filter_weight_;
+  double max_tilt_angle_;
   bool is_ude_integration_active_;
   bool is_error_filtering_active_;
 
@@ -94,7 +94,9 @@ class PathFollowingController {
  public:
   PathFollowingController(mdl::MultirotorPayloadDynamics &sys_mdl, mdl::MotorModel &motor_mdl,
                           const PathFollowingControllerParams &params)
-      : sys_mdl_(sys_mdl),
+      : ud_integrator_(utils::zeros<double, 3>, params_.integral_bounds(), -params_.integral_bounds(),
+                       params_.err_vel_bounds(), -params_.err_vel_bounds()),
+        sys_mdl_(sys_mdl),
         motor_mdl_(motor_mdl),
         err_p_(params.err_p()),
         vel_p_(params.vel_p()),
@@ -103,9 +105,7 @@ class PathFollowingController {
         vel_filter_weight_(params.vel_filter_weight),
         max_tilt_angle_(params.max_tilt_angle),
         is_ude_integration_active_(params.init_ude_integration_active),
-        is_error_filtering_active_(params.init_error_filtering_active),
-        ud_integrator_(utils::zeros<double, 3>, params_.integral_bounds(), -params_.integral_bounds(),
-                       params_.err_vel_bounds(), -params_.err_vel_bounds()){};
+        is_error_filtering_active_(params.init_error_filtering_active){};
 
   utils::ThrustAndAttitudeTarget runController(const Eigen::Vector3d &pos_error, const Eigen::Vector3d &vel_error,
                                                double yaw_sp, double dt) {
@@ -196,4 +196,4 @@ class PathFollowingController {
 
 }  // namespace ctl
 
-#endif // PATHFOLLOWINGCONTROLLER
+#endif  // PATHFOLLOWINGCONTROLLER

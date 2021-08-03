@@ -8,11 +8,11 @@ template <typename T, int Xdim = Eigen::Dynamic>
 class DiscreteTimeIntegrator {
   using ValueType = Eigen::Matrix<T, Xdim, 1>;
 
-  const ValueType input_ub_;
-  const ValueType input_lb_;
-  const ValueType integral_ub_;
-  const ValueType integral_lb_;
   ValueType value_;
+  const ValueType integral_lb_;
+  const ValueType integral_ub_;
+  const ValueType input_lb_;
+  const ValueType input_ub_;
 
   bool is_integral_saturated_;
 
