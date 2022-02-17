@@ -1,9 +1,0 @@
-feedback_source_topics:
-  vehicle_pose: "/mavros/local_position/pose"
-  vehicle_twist: "/mavros/local_position/velocity_local"
-
-sys_model_param_ns: "sys_model"
-
-sys_model:
-  vehicle_mass: 0.5
-  payload_mass: 1.0

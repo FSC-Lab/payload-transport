@@ -1,0 +1,21 @@
+<launch>
+  <!-- vim: set ft=xml noet : -->
+  <!-- base node launch file-->
+
+  <arg name="launch_prefix" default=""/>
+  <arg name="mavros_ns" default="/mavros" />
+  <arg name="waypoint_topic" default ="$(arg mavros_ns)/mission/waypoints" />
+  <arg name="param_file" default="$(find payload_transport_controller)/config/params.yaml" />
+  <arg name="log_level" default="1" />
+  <arg name="payload_pose_topic" default="/payload_pose" />
+
+  <node pkg="rosservice" type="rosservice" name="pull_wp" args="call --wait $(arg mavros_ns)/mission/pull" />
+  <node pkg="payload_transport_controller" type="payload_transport_controller_node" name="payload_transport_controller" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" args="--mavros-ns $(arg mavros_ns)">
+    <rosparam command="load" file="$(arg param_file)" />
+    <param name="log_level" value="$(arg log_level)" />
+    <param name="mission/waypoint_topic" value="$(arg waypoint_topic)"/>
+    <param name="payload_pose_topic" value="$(arg payload_pose_topic)" />
+  </node>
+
+
+</launch>

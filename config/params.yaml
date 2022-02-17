@@ -1,0 +1,30 @@
+vehicle_number: 3
+vehicle_mass: 1.535
+payload_mass: 0.0
+cable_length: 1.0
+
+motor_model:
+  offset: 0.0
+  scale: 0.0475
+
+safe:
+  saturation_thrust: 30
+
+controller:
+  kp_err_xy: 3.0
+  kp_err_z: 4.0
+  kp_vel_xy: 2.0
+  kp_vel_z: 3.0
+  err_filter_weight: 1.0
+  ude:
+    weight: 2.0
+    lower_bound: [-0.5, -0.5, -5]
+    upper_bound: [0.5, 0.5, 5]
+
+mission:
+  max_climb_angle: 10
+  cruise_speed: 3.0
+  radius_acceptance: 0.5
+  radius_acceptance_xy: 0.5
+  radius_acceptance_z: 2.0
+  max_error_increasing_duration: 2.5
